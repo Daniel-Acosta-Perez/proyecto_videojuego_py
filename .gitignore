@@ -1,0 +1,32 @@
+# Python bytecode
+*.pyc
+*.pyo
+__pycache__
+
+# Archivos de entorno virtual
+venv/
+env/
+ENV/
+*.env
+
+# Archivos de configuración del entorno
+*.idea/
+*.vscode/
+
+# Archivos de log
+*.log
+
+# Archivos de caché de compilador
+*.pyc
+
+# Archivos de distribución y compilación
+dist/
+build/
+*.egg-info/
+
+# Archivos de bases de datos locales (si estás usando SQLite, por ejemplo)
+*.db
+
+# Archivos de configuraciones temporales
+*.swp
+*.swo

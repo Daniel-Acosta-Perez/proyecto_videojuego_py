@@ -1,5 +1,11 @@
-# prueba_jugador.py
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import tkinter as tk
+from tkinter import messagebox
+from modelo.jugador import Jugador  # Importamos el modelo del jugador
+from controlador.controlador_jugador import ControladorJugador
 
 def crear_ventana_jugador(master=None):
     # Crear ventana secundaria
@@ -7,6 +13,8 @@ def crear_ventana_jugador(master=None):
     jugador.geometry("500x400")
     jugador.title("Nuevo jugador")
     jugador.configure(bg="#2c3e50")
+
+    controlador = ControladorJugador(vista=jugador)
 
     # Fondo decorativo
     canvas = tk.Canvas(jugador, width=500, height=400)
@@ -26,20 +34,14 @@ def crear_ventana_jugador(master=None):
         entrada.place(x=230, y=y_pos, width=200)
         return entrada
 
-    name_jugador = crear_entrada("Nombre del personaje:", 100)
-    nivel_jugador = crear_entrada("Nivel del personaje:", 140)
-    puntuacion_jugador = crear_entrada("Puntuación del personaje:", 180)
-    equipo_jugador = crear_entrada("Equipo del personaje:", 220)
-    inventario_jugador = crear_entrada("Inventario del personaje:", 260)
+    jugador.name_jugador = crear_entrada("Nombre del personaje:", 100)
+    jugador.nivel_jugador = crear_entrada("Nivel del personaje:", 140)
+    jugador.puntuacion_jugador = crear_entrada("Puntuación del personaje:", 180)
+    jugador.equipo_jugador = crear_entrada("Equipo (ID):", 220)
 
     # Funciones
     def guardar_personaje():
-        nombre = name_jugador.get()
-        nivel = nivel_jugador.get()
-        puntuacion = puntuacion_jugador.get()
-        equipo = equipo_jugador.get()
-        inventario = inventario_jugador.get()
-        print(f"Jugador guardado:\nNombre: {nombre}\nNivel: {nivel}\nPuntuación: {puntuacion}\nEquipo: {equipo}\nInventario: {inventario}")
+        controlador.guardar_jugador()
 
     # Botones personalizados
     def crear_boton(texto, comando, x_pos):
@@ -59,3 +61,9 @@ def crear_ventana_jugador(master=None):
 
     crear_boton("Guardar Jugador", guardar_personaje, 50)
     crear_boton("Salir", jugador.destroy, 350)
+
+if __name__ == "__main__":
+    root = tk.Tk()  # Ventana principal
+    root.withdraw()  # Ocultar la ventana principal (si no la necesitas)
+    crear_ventana_jugador(root)  # Llamamos a la función para crear la ventana del jugador
+    root.mainloop()  # Iniciar el bucle principal de Tkinter
