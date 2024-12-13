@@ -1,5 +1,13 @@
 CREATE DATABASE IF NOT EXISTS videojuegosistema;
 USE videojuegosistema;
+-- drop database videojuegosistema;
+-- Tabla de equipos
+CREATE TABLE equipos (
+    equipo_ID INT NOT NULL AUTO_INCREMENT,
+    equipo_nombre VARCHAR(50) NOT NULL,
+    PRIMARY KEY (equipo_ID)
+);
+
 
 -- Tabla de jugadores
 CREATE TABLE jugadores (
@@ -12,12 +20,7 @@ CREATE TABLE jugadores (
     FOREIGN KEY (equipo_ID) REFERENCES equipos(equipo_ID)
 );
 
--- Tabla de equipos
-CREATE TABLE equipos (
-    equipo_ID INT NOT NULL AUTO_INCREMENT,
-    equipo_nombre VARCHAR(50) NOT NULL,
-    PRIMARY KEY (equipo_ID)
-);
+
 
 -- Tabla de inventarios
 CREATE TABLE inventarios (
@@ -41,12 +44,6 @@ CREATE TABLE partidas (
     FOREIGN KEY (equipo2_ID) REFERENCES equipos(equipo_ID)
 );
 
--- Tabla de mundos
-CREATE TABLE mundos (
-    mun_ID INT NOT NULL AUTO_INCREMENT,
-    grafo_serializado JSON NOT NULL,
-    PRIMARY KEY (mun_ID)
-);
 
 -- Tabla de rankings
 CREATE TABLE ranking (
@@ -58,104 +55,123 @@ CREATE TABLE ranking (
     FOREIGN KEY (ID_jugador) REFERENCES jugadores(jug_ID)
 );
 
--- Eliminar procedimiento previo si existe
-DROP PROCEDURE IF EXISTS insertJugadores;
-DELIMITER //
+ALTER TABLE jugadores ADD COLUMN inventario TEXT;
 
-CREATE PROCEDURE insertJugadores()
+INSERT INTO equipos (equipo_nombre) VALUES 
+('Equipo Rojo'), 
+('Equipo Azul'), 
+('Equipo Verde'), 
+('Equipo Prueba');
+
+
+-- Tabla de mundos
+CREATE TABLE mundos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- Tabla de ubicaciones
+CREATE TABLE ubicaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    mundo_id INT,
+    FOREIGN KEY (mundo_id) REFERENCES mundos(id)
+);
+
+-- Tabla de conexiones entre ubicaciones
+CREATE TABLE conexiones (
+    origen_id INT,
+    destino_id INT,
+    distancia INT,
+    PRIMARY KEY (origen_id, destino_id),
+    FOREIGN KEY (origen_id) REFERENCES ubicaciones(id),
+    FOREIGN KEY (destino_id) REFERENCES ubicaciones(id)
+);
+
+INSERT INTO mundos (nombre) VALUES ('Mundo1');
+
+-- Inserta ubicaciones
+INSERT INTO ubicaciones (nombre, mundo_id) VALUES ('Ubicacion1', 1);
+INSERT INTO ubicaciones (nombre, mundo_id) VALUES ('Ubicacion2', 1);
+INSERT INTO ubicaciones (nombre, mundo_id) VALUES ('Ubicacion3', 1);
+
+-- Conectar ubicaciones
+INSERT INTO conexiones (origen_id, destino_id, distancia) VALUES (1, 2, 5);
+INSERT INTO conexiones (origen_id, destino_id, distancia) VALUES (2, 3, 3);
+INSERT INTO conexiones (origen_id, destino_id, distancia) VALUES (1, 3, 10);
+
+use viedeojuegosistema;
+delete from conexiones;
+
+SELECT * FROM ubicaciones;
+SELECT * FROM conexiones;
+
+SELECT c.origen_id, c.destino_id, c.distancia
+FROM conexiones c;
+
+UPDATE conexiones
+SET distancia = 10
+WHERE distancia IS NULL;
+
+SELECT c.origen_id, c.destino_id, c.distancia
+FROM conexiones c;
+
+UPDATE conexiones
+SET distancia = 10
+WHERE distancia IS NULL;
+
+SELECT c.origen_id, c.destino_id, c.distancia, u1.nombre AS origen, u2.nombre AS destino
+FROM conexiones c
+JOIN ubicaciones u1 ON c.origen_id = u1.id
+JOIN ubicaciones u2 ON c.destino_id = u2.id;
+
+DESCRIBE inventarios;
+ALTER TABLE inventarios ADD COLUMN jugador_id INT NOT NULL;
+ALTER TABLE inventarios ADD COLUMN objeto VARCHAR(255) NOT NULL;
+ALTER TABLE inventarios DROP COLUMN jugador_id;
+
+
+DROP TABLE IF EXISTS partidas;
+
+CREATE TABLE partidas (
+    par_ID INT NOT NULL AUTO_INCREMENT,
+    fecha DATETIME NOT NULL, 
+    jugadores TEXT NOT NULL,
+    resultado VARCHAR(15) NOT NULL,
+    PRIMARY KEY (par_ID)
+);
+DROP TABLE IF EXISTS ranking;
+CREATE TABLE ranking (
+    jugador_ID INT NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    puntuacion INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (jugador_ID),
+    FOREIGN KEY (jugador_ID) REFERENCES jugadores(jug_ID)
+);
+
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizar_ranking()
 BEGIN
-    -- Insertar jugadores
-    INSERT INTO jugadores (jug_nombre, jug_nivel, jug_puntuacion, equipo_ID)
-    VALUES 
-    ('Ana', 11, 220, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Negro')),
-    ('Ana', 8, 250, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Azul')),
-    ('Carlos', 15, 1000, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Verde')),
-    ('Sofía', 12, 800, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Rojo')),
-    ('Luis', 5, 100, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Amarillo')),
-    ('Valeria', 18, 1200, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Azul')),
-    ('Diego', 7, 300, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Verde')),
-    ('Mariana', 11, 450, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Rojo')),
-    ('Fernando', 20, 1500, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Amarillo')),
-    ('Lucía', 14, 700, (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Azul'));
+    -- Limpia la tabla ranking
+    TRUNCATE TABLE ranking;
 
-    -- Insertar inventarios
-    INSERT INTO inventarios (jug_ID, item_nombre, item_descripcion) 
-    VALUES 
-    ((SELECT jug_ID FROM jugadores WHERE jug_nombre = 'Ana'), 'Arco', 'Arco largo con gran alcance'),
-    ((SELECT jug_ID FROM jugadores WHERE jug_nombre = 'Ana'), 'Flechas de fuego', 'Flechas imbuidas con fuego'),
-    ((SELECT jug_ID FROM jugadores WHERE jug_nombre = 'Ana'), 'Poción de fuerza', 'Poción que aumenta la fuerza'),
-    ((SELECT jug_ID FROM jugadores WHERE jug_nombre = 'Carlos'), 'Hacha', 'Hacha afilada y resistente'),
-    ((SELECT jug_ID FROM jugadores WHERE jug_nombre = 'Carlos'), 'Casco', 'Casco de metal de alta calidad'),
-    -- Añadir más ítems para los demás jugadores
-    ;
-END //
-
-DELIMITER ;
-
--- Eliminar procedimiento previo si existe
-DROP PROCEDURE IF EXISTS updateJugador;
-DELIMITER //
-
-CREATE PROCEDURE updateJugador()
-BEGIN
-    -- Actualizar jugadores
-    UPDATE jugadores
-    SET equipo_ID = (SELECT equipo_ID FROM equipos WHERE equipo_nombre = 'Equipo Negro')
-    WHERE jug_ID = 2;
-    
-    UPDATE jugadores
-    SET jug_nivel = 20
-    WHERE jug_ID = 6;
-    
-    UPDATE jugadores
-    SET jug_nombre = 'Manolo Jose'
-    WHERE jug_ID = 7;
-    
-    UPDATE jugadores
-    SET jug_puntuacion = 340
-    WHERE jug_ID = 3;
-    
-    UPDATE jugadores
-    SET jug_nombre = 'Galvan Bael'
-    WHERE jug_ID = 5;
-END //
-
-DELIMITER ;
-
--- Eliminar procedimiento previo si existe
-DROP PROCEDURE IF EXISTS deleteJugadores;
-DELIMITER //
-
-CREATE PROCEDURE deleteJugadores()
-BEGIN
-    -- Eliminar jugador con ID = 9
-    DELETE FROM jugadores WHERE jug_ID = 9;
-END //
-
-DELIMITER ;
-
--- Procedimiento para ver los jugadores
-DELIMITER //
-
-CREATE PROCEDURE seeJugador()
-BEGIN
-    SELECT 
-        j.jug_ID,
-        j.jug_nombre,
-        j.jug_nivel,
-        j.jug_puntuacion,
-        e.equipo_nombre,
-        i.item_nombre,
-        i.item_descripcion
+    -- Recalcula la puntuación total para cada jugador
+    INSERT INTO ranking (jugador_ID, nombre, puntuacion)
+    SELECT
+        j.jugador_ID,
+        j.nombre,
+        COALESCE(SUM(
+            CASE
+                WHEN p.resultado LIKE CONCAT('%', j.nombre, '%') THEN 10 -- Suma 10 puntos si el jugador ganó
+                ELSE 0
+            END
+        ), 0) AS puntuacion
     FROM jugadores j
-    JOIN equipos e ON j.equipo_ID = e.equipo_ID
-    LEFT JOIN inventarios i ON j.jug_ID = i.jug_ID;
-END //
+    LEFT JOIN partidas p ON FIND_IN_SET(j.nombre, p.jugadores)
+    GROUP BY j.jugador_ID, j.nombre
+    ORDER BY puntuacion DESC;
+END$$
 
 DELIMITER ;
-
--- Ejecutar los procedimientos
-CALL insertJugadores();
-CALL updateJugador();
-CALL deleteJugadores();
-CALL seeJugador();
