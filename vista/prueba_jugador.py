@@ -68,7 +68,7 @@ class VistaJugador:
             messagebox.showerror("Error", "Nivel y puntuación deben ser números enteros.")
             return
 
-        jugador_id = self.controlador.crear_jugador(nombre, nivel, puntuacion, equipo, inventario)
+        jugador_id = self.controlador.guardar_jugador(nombre, nivel, puntuacion, equipo, inventario)
         if jugador_id:
             messagebox.showinfo("Éxito", f"Jugador '{nombre}' creado con ID {jugador_id}.")
             self.limpiar_campos()
