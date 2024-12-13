@@ -5,6 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from modelo.arbol_partidas import ArbolPartida
 from modelo.conexion_bd import ConexionBD
 from tkinter import messagebox
+from modelo.ranking_modelo import RankingModelo
+
 
 class ControladorPartidas:
     def __init__(self):
@@ -24,6 +26,10 @@ class ControladorPartidas:
             messagebox.showinfo("Éxito", "Partida agregada correctamente.")
         except Exception as e:
             messagebox.showerror("Error", f"Error al agregar la partida: {e}")
+        
+        self.ranking_modelo.actualizar_ranking()
+        print("El ranking ha sido actualizado tras registrar la partida.")
+
 
     def buscar_partidas(self, fecha_inicio, fecha_fin):
         """

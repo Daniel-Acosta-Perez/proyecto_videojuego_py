@@ -14,6 +14,18 @@ class NodoPartida:
 
 
 class ArbolPartida:
+  
+    """
+Clase que representa un árbol binario de partidas, donde cada nodo es una partida
+identificada por su fecha. Permite agregar, buscar, recorrer en orden y eliminar
+partidas basadas en sus fechas.
+
+Métodos:
+- agregar_partida(fecha, jugadores, resultado): Agrega una nueva partida al árbol.
+- buscar_partidas(fecha_inicio, fecha_fin): Busca partidas en un rango de fechas.
+- recorrer_en_orden(): Retorna una lista de todas las partidas en orden de fechas.
+- eliminar_partida(fecha): Elimina una partida del árbol basada en su fecha.
+    """
     def __init__(self):
         self.raiz = None
 

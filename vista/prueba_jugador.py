@@ -1,102 +1,146 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import tkinter as tk
 from tkinter import messagebox
-from modelo.jugador import Jugador  # Importamos el modelo del jugador
 from controlador.controlador_jugador import ControladorJugador
 
-def crear_ventana_jugador(master=None):
-    # Crear ventana secundaria
-    jugador = tk.Toplevel(master)
-    jugador.geometry("500x400")
-    jugador.title("Gestión de Jugadores")
-    jugador.configure(bg="#2c3e50")
+class VistaJugador:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Gestión de Jugadores")
+        self.root.geometry("800x600")
 
-    controlador = ControladorJugador(vista=jugador)
+        # Pasar la vista al controlador
+        self.controlador = ControladorJugador(self)
 
-    # Fondo decorativo
-    canvas = tk.Canvas(jugador, width=600, height=500)
-    canvas.place(x=0, y=0)
-    canvas.create_rectangle(0, 0, 600, 500, fill="#34495e", outline="")
-    canvas.create_rectangle(20, 20, 580, 480, fill="#2c3e50", outline="#16a085", width=3)
+        # Título principal
+        tk.Label(self.root, text="Gestión de Jugadores", font=("Helvetica", 16, "bold")).pack(pady=10)
 
-    # Título principal
-    titulo = tk.Label(jugador, text="Gestión de Jugadores", font=("Helvetica", 18, "bold"), bg="#2c3e50", fg="#ecf0f1")
-    titulo.place(x=180, y=30)
+        # Sección para crear jugador
+        tk.Label(self.root, text="Nombre del Jugador:", font=("Helvetica", 12)).pack()
+        self.entry_nombre = tk.Entry(self.root, font=("Helvetica", 12))
+        self.entry_nombre.pack(pady=5)
 
-    # Etiquetas y entradas
-    def crear_entrada(label_text, y_pos):
-        lbl = tk.Label(jugador, text=label_text, font=("Helvetica", 12), bg="#2c3e50", fg="#ecf0f1")
-        lbl.place(x=50, y=y_pos)
-        entrada = tk.Entry(jugador, font=("Helvetica", 10), bg="#ecf0f1", fg="#34495e", relief="flat")
-        entrada.place(x=230, y=y_pos, width=300)
-        return entrada
+        tk.Label(self.root, text="Nivel del Jugador:", font=("Helvetica", 12)).pack()
+        self.entry_nivel = tk.Entry(self.root, font=("Helvetica", 12))
+        self.entry_nivel.pack(pady=5)
 
-    jugador.name_jugador = crear_entrada("Nombre del personaje:", 100)
-    jugador.nivel_jugador = crear_entrada("Nivel del personaje:", 140)
-    jugador.puntuacion_jugador = crear_entrada("Puntuación del personaje:", 180)
-    jugador.equipo_jugador = crear_entrada("Equipo (ID):", 220)
+        tk.Label(self.root, text="Puntuación Inicial:", font=("Helvetica", 12)).pack()
+        self.entry_puntuacion = tk.Entry(self.root, font=("Helvetica", 12))
+        self.entry_puntuacion.pack(pady=5)
 
-    # Tabla de jugadores
-    tabla_jugadores = tk.Listbox(jugador, font=("Helvetica", 10), bg="#ecf0f1", fg="#34495e", height=10, width=50)
-    tabla_jugadores.place(x=50, y=260)
+        tk.Label(self.root, text="Equipo:", font=("Helvetica", 12)).pack()
+        self.entry_equipo = tk.Entry(self.root, font=("Helvetica", 12))
+        self.entry_equipo.pack(pady=5)
 
-    def actualizar_tabla():
-        tabla_jugadores.delete(0, tk.END)
-        jugadores = controlador.listar_jugadores()
+        tk.Label(self.root, text="Inventario:", font=("Helvetica", 12)).pack()
+        self.entry_inventario = tk.Entry(self.root, font=("Helvetica", 12))
+        self.entry_inventario.pack(pady=5)
+
+        tk.Button(self.root, text="Crear Jugador", command=self.crear_jugador, bg="#16a085", fg="white", font=("Helvetica", 12), width=20).pack(pady=10)
+
+        # Tabla para listar jugadores
+        self.tabla = tk.Listbox(self.root, font=("Helvetica", 12), height=15, width=70)
+        self.tabla.pack(pady=10)
+
+        tk.Button(self.root, text="Listar Jugadores", command=self.listar_jugadores, bg="#3498db", fg="white", font=("Helvetica", 12), width=20).pack(pady=10)
+
+        # Botones para editar y eliminar jugadores
+        tk.Button(self.root, text="Editar Jugador", command=self.editar_jugador, bg="#f39c12", fg="white", font=("Helvetica", 12), width=20).pack(pady=10)
+        tk.Button(self.root, text="Eliminar Jugador", command=self.eliminar_jugador, bg="#e74c3c", fg="white", font=("Helvetica", 12), width=20).pack(pady=10)
+
+    def crear_jugador(self):
+        nombre = self.entry_nombre.get()
+        nivel = self.entry_nivel.get()
+        puntuacion = self.entry_puntuacion.get()
+        equipo = self.entry_equipo.get()
+        inventario = self.entry_inventario.get()
+
+        if not (nombre and nivel and puntuacion):
+            messagebox.showerror("Error", "Todos los campos obligatorios deben ser llenados.")
+            return
+
+        try:
+            nivel = int(nivel)
+            puntuacion = int(puntuacion)
+        except ValueError:
+            messagebox.showerror("Error", "Nivel y puntuación deben ser números enteros.")
+            return
+
+        jugador_id = self.controlador.crear_jugador(nombre, nivel, puntuacion, equipo, inventario)
+        if jugador_id:
+            messagebox.showinfo("Éxito", f"Jugador '{nombre}' creado con ID {jugador_id}.")
+            self.limpiar_campos()
+        else:
+            messagebox.showerror("Error", "No se pudo crear el jugador.")
+
+    def listar_jugadores(self):
+        jugadores = self.controlador.listar_jugadores()
+        self.tabla.delete(0, tk.END)
         for jugador in jugadores:
-            tabla_jugadores.insert(tk.END, f"ID: {jugador['jug_ID']}, Nombre: {jugador['jug_nombre']}, Nivel: {jugador['jug_nivel']}, Puntuación: {jugador['jug_puntuacion']}, Equipo: {jugador['equipo_ID']}")
+            self.tabla.insert(tk.END, f"ID: {jugador['jug_ID']}, Nombre: {jugador['jug_nombre']}, Nivel: {jugador['jug_nivel']}")
 
-# Funciones
-    def guardar_personaje():
-        controlador.guardar_jugador()
-        actualizar_tabla()
+    def editar_jugador(self):
+        seleccion = self.tabla.curselection()
+        if not seleccion:
+            messagebox.showerror("Error", "Debe seleccionar un jugador para editar.")
+            return
 
-    def modificar_personaje():
-        seleccionado = tabla_jugadores.curselection()
-        if seleccionado:
-            jugador_id = tabla_jugadores.get(seleccionado).split(",")[0].split(":")[1].strip()
-            controlador.modificar_jugador(int(jugador_id))
-            actualizar_tabla()
+        jugador_info = self.tabla.get(seleccion[0])
+        jugador_id = jugador_info.split(",")[0].split(": ")[1]
+
+        nombre = self.entry_nombre.get()
+        nivel = self.entry_nivel.get()
+        puntuacion = self.entry_puntuacion.get()
+        equipo = self.entry_equipo.get()
+        inventario = self.entry_inventario.get()
+
+        if not (nombre and nivel and puntuacion):
+            messagebox.showerror("Error", "Todos los campos obligatorios deben ser llenados para editar.")
+            return
+
+        try:
+            nivel = int(nivel)
+            puntuacion = int(puntuacion)
+        except ValueError:
+            messagebox.showerror("Error", "Nivel y puntuación deben ser números enteros.")
+            return
+
+        actualizado = self.controlador.editar_jugador(jugador_id, nombre, nivel, puntuacion, equipo, inventario)
+        if actualizado:
+            messagebox.showinfo("Éxito", f"Jugador ID {jugador_id} actualizado correctamente.")
+            self.limpiar_campos()
+            self.listar_jugadores()
         else:
-            messagebox.showwarning("Advertencia", "Seleccione un jugador para modificar.")
+            messagebox.showerror("Error", "No se pudo actualizar el jugador.")
 
-    def eliminar_personaje():
-        seleccionado = tabla_jugadores.curselection()
-        if seleccionado:
-            jugador_id = tabla_jugadores.get(seleccionado).split(",")[0].split(":")[1].strip()
-            controlador.eliminar_jugador(int(jugador_id))
-            actualizar_tabla()
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un jugador para eliminar.")
+    def eliminar_jugador(self):
+        seleccion = self.tabla.curselection()
+        if not seleccion:
+            messagebox.showerror("Error", "Debe seleccionar un jugador para eliminar.")
+            return
 
-    # Botones personalizados
-    def crear_boton(texto, comando, x_pos):
-        return tk.Button(
-            jugador,
-            text=texto,
-            command=comando,
-            font=("Helvetica", 10, "bold"),
-            bg="#16a085",
-            fg="white",
-            relief="raised",
-            activebackground="#1abc9c",
-            activeforeground="white",
-            width=16,
-            height=2
-        ).place(x=x_pos, y=430)
+        jugador_info = self.tabla.get(seleccion[0])
+        jugador_id = jugador_info.split(",")[0].split(": ")[1]
 
-    crear_boton("Guardar Jugador", guardar_personaje, 50)
-    crear_boton("Modificar Jugador", modificar_personaje, 230)
-    crear_boton("Eliminar Jugador", eliminar_personaje, 410)
+        confirmacion = messagebox.askyesno("Confirmar", f"¿Está seguro de eliminar al jugador ID {jugador_id}?")
+        if confirmacion:
+            eliminado = self.controlador.eliminar_jugador(jugador_id)
+            if eliminado:
+                messagebox.showinfo("Éxito", f"Jugador ID {jugador_id} eliminado correctamente.")
+                self.listar_jugadores()
+            else:
+                messagebox.showerror("Error", "No se pudo eliminar el jugador.")
 
-    # Cargar tabla inicial
-    actualizar_tabla()
+    def limpiar_campos(self):
+        self.entry_nombre.delete(0, tk.END)
+        self.entry_nivel.delete(0, tk.END)
+        self.entry_puntuacion.delete(0, tk.END)
+        self.entry_equipo.delete(0, tk.END)
+        self.entry_inventario.delete(0, tk.END)
 
 if __name__ == "__main__":
-    root = tk.Tk()  # Ventana principal
-    root.withdraw()  # Ocultar la ventana principal (si no la necesitas)
-    crear_ventana_jugador(root)  # Llamamos a la función para crear la ventana del jugador
-    root.mainloop()  # Iniciar el bucle principal de Tkinter    
+    root = tk.Tk()
+    app = VistaJugador(root)
+    root.mainloop()

@@ -52,7 +52,10 @@ class Inventario:
 
     def _eliminar_de_bd(self, jug_id, objeto):
         """
-            Elimina un objeto de la base de datos.
+        Elimina un objeto específico del inventario de un jugador en la base de datos.
+
+        :param jug_id: ID del jugador cuyo objeto se eliminará.
+        :param objeto: Nombre del objeto a eliminar.
         """
         conexion = ConexionBD()
         conn = conexion.conectar()
